@@ -24,11 +24,16 @@ async function collect():Promise<JourneyTracking>{
   const token=await accessToken();if(!token||!process.env.TESLA_VIN)return finish('unavailable','Tesla connection is not configured.');
   const headers={Authorization:'Bearer '+token};const scopes=teslaTokenScopes(token);
   const location=scopes.includes('vehicle_location');
+  if(!location){try{const capability=JSON.parse(await readFile(path.join(root(),'capabilities.json'),'utf8'));if(capability.vin===process.env.TESLA_VIN&&capability.requiresLocationForDrive)return finish('needs-permission','Tesla requires Vehicle Location before it will supply driving readings for this car. Connect location to enable live journeys, energy and routes.',15);}catch{}}
   const get=async(url:string)=>{const r=await fetch(url,{headers,cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('Vehicle sample unavailable');return (await r.json()).response;};
   const base=audience()+'/api/1/vehicles/'+encodeURIComponent(process.env.TESLA_VIN);
   if(!store.active||store.active.parkedAt){const identity=await get(base);if(identity.state!=='online'){store=updateDrive(store,undefined);await save('history.json',store);return finish(location?'asleep':'needs-permission',location?'Car is asleep or offline. Waiting without waking it.':'Car is asleep or offline. Energy recording is configured; grant Vehicle Location to add GPS routes.');}}
   const v=await get(base+'/vehicle_data?'+new URLSearchParams({endpoints:'drive_state;vehicle_state;charge_state'+(location?';location_data':'')}));const drive=v.drive_state??{},vehicle=v.vehicle_state??{},charge=v.charge_state??{};
-  const timestamp=Number(drive.timestamp);if(!Number.isFinite(timestamp))return finish('unavailable','Tesla returned no fresh driving timestamp.');
+  const timestamp=typeof drive.timestamp==='number'?drive.timestamp:NaN;
+  if(!Number.isFinite(timestamp)){
+   if(!location){await save('capabilities.json',{vin:process.env.TESLA_VIN,requiresLocationForDrive:true});return finish('needs-permission','Tesla omitted driving readings from the current grant. Connect Vehicle Location to enable live journeys, energy and routes.',15);}
+   return finish('unavailable','Tesla returned no fresh driving timestamp.');
+  }
   const sample:DriveSample={time:new Date(timestamp).toISOString(),gear:drive.shift_state,speed:drive.speed,heading:location?drive.heading:undefined,latitude:location?drive.latitude:undefined,longitude:location?drive.longitude:undefined,odometer:vehicle.odometer,powerKw:drive.power,batteryPercent:charge.battery_level};
   const home={time:sample.time,latitude:Number(process.env.HOME_LATITUDE),longitude:Number(process.env.HOME_LONGITUDE)};
   sample.chargingAway=charge.charging_state==='Charging'&&(charge.fast_charger_present===true||drive.located_at_home===false||(!!process.env.HOME_LATITUDE&&!!process.env.HOME_LONGITUDE&&hasGps(home)&&hasGps(sample)&&gpsMiles(home,sample)>.2));
