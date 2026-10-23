@@ -9,6 +9,7 @@ import {ThemeControl} from './components/theme-control';
 import {JourneyMap} from './components/journey-map';
 import {JourneysView} from './components/journeys-view';
 import {useJourneyFeed} from './components/use-journey-feed';
+import {drivingJourneyKey} from '../lib/journey-live';
 import type {Dashboard,Session} from '../lib/data';
 import {filterCharges,classifyCharge,type ChargingHistory} from '../lib/charging-history-model';
 const money=(value:number)=>new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(value);
@@ -18,9 +19,9 @@ export default function DashboardView(){
  const[data,setData]=useState<Dashboard|null>(null);
  const[view,setView]=useState('Overview');
  const {feed:journeyFeed,refresh:refreshJourneyFeed}=useJourneyFeed();
- const driving=!!journeyFeed?.live?.driving&&Date.now()-Date.parse(journeyFeed.live.sample.time)<150000;
- const wasDriving=useRef(false);
- useEffect(()=>{if(driving&&!wasDriving.current)setView('Journeys');wasDriving.current=driving;},[driving]);
+ const drivingKey=drivingJourneyKey(journeyFeed),driving=drivingKey!==null;
+ const wasDriving=useRef<string|null>(null);
+ useEffect(()=>{if(drivingKey&&drivingKey!==wasDriving.current)setView('Journeys');wasDriving.current=drivingKey;},[drivingKey]);
  const[period,setPeriod]=useState('Last 6 months');
  const[history,setHistory]=useState<ChargingHistory|null>(null);
  async function loadHistory(){try{const r=await fetch('/api/charging-history');if(r.status===401){window.location.assign('/login');return;}if(!r.ok)throw Error();setHistory(await r.json())}catch{setHistory(previous=>previous?{...previous,status:'stale',message:'Showing saved history. The latest refresh failed.'}:{status:'unavailable',from:'',to:'',updated:'',sessions:[],message:'Charging history could not be loaded.'})}}
