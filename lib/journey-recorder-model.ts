@@ -29,6 +29,9 @@ export function updateDrive(store:JourneyStore,sample?:DriveSample,now=Date.now(
  const finish=(end:string,incomplete=false)=>{if(!next.active)return;const trip=driveTrip({...next.active,partial:next.active.partial||incomplete},end);if(trip.miles>=.03||trip.coordinates!.length>=3)next.trips=[trip,...next.trips.filter(t=>t.id!==trip.id)].slice(0,1000);next.active=undefined;};
  if(!sample){if(next.active){const a=next.active;if(a.parkedAt&&!a.awayChargeStop&&now-Date.parse(a.parkedAt)>=30*60000)finish(a.parkedAt);else if(!a.parkedAt&&now-Date.parse(a.last.time)>10*60000)finish(a.last.time,true);}return next;}
  const time=Date.parse(sample.time);if(!Number.isFinite(time)||time>now+30000||time<=Date.parse(next.active?.last.time??next.previous?.time??''))return next;
+ // Polling can report a null shift state while parked. Missing fields remain
+ // unknown; an explicitly null state with movement still counts as driving.
+ if(sample.gear===null&&!isDriving(sample))sample={...sample,gear:'P'};
  const driving=isDriving(sample);
  if(next.active?.parkedAt&&!next.active.awayChargeStop&&!sample.chargingAway&&time-Date.parse(next.active.parkedAt)>=30*60000)finish(next.active.parkedAt);
  if(!next.active&&driving){const previous=next.previous&&time-Date.parse(next.previous.time)<=90000?next.previous:undefined;next.active={id:'drive-'+time,start:previous?.time??sample.time,last:sample,samples:previous?[previous,sample]:[sample],partial:!previous};}

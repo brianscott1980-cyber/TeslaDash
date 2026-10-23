@@ -43,7 +43,7 @@ For local development, use the registered localhost callback and the explicitly 
 
 The recorder requests `location_data` explicitly. It records actual GPS points, odometer and sampled drive power; missing or stale GPS is reported rather than described as successful recording. The worker must run independently of the browser using `scripts/journey-worker.mjs`, its dedicated `JOURNEY_RECORDER_TOKEN`, and persistent `/config` storage. A grant alone does not start the worker. Workstation-assisted grants can be relayed to the NAS using a separate server-only `JOURNEY_AUTH_RELAY_TOKEN`; failed relay is reported as failure.
 
-Polling is metered by Tesla. The worker waits without sending wake-up commands. Energy inferred from sampled power is an estimate; gaps are preserved. Historical routes cannot be recovered from old odometer readings. Route preview data is explicitly illustrative.
+Polling is metered by Tesla. The worker waits without sending wake-up commands. Without Vehicle Location, the existing Vehicle Information grant can still support driving energy/distance and automatic journey focus, while GPS and navigation estimates remain unavailable. Energy inferred from sampled power is an estimate; gaps are preserved. Historical routes cannot be recovered from old odometer readings. Route preview data is explicitly illustrative.
 
 ## Charging and storage
 

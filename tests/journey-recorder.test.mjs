@@ -35,3 +35,8 @@ test('A sleeping car during a brief parked stop remains joinable after restart',
  let s=apply({trips:[]},sample(0));s=apply(s,sample(30));s=apply(s,sample(60,{gear:'P',speed:0}));const id=s.active.id;
  s=updateDrive(s,undefined,base+1200*1000);assert.equal(s.active.id,id);s=apply(s,sample(1500));assert.equal(s.active.id,id);
 });
+
+test('Explicit null parked gear keeps a short stop in the journey without splitting traffic stops in Drive',()=>{
+ let s=apply({trips:[]},sample(0));s=apply(s,sample(30));s=apply(s,sample(60,{gear:null,speed:0,powerKw:0}));const id=s.active.id;
+ s=apply(s,sample(600,{gear:null,speed:0,powerKw:0}));assert.equal(s.active.parkedAt,sample(60).time);assert.equal(s.trips.length,0);s=apply(s,sample(900));assert.equal(s.active.id,id);
+});

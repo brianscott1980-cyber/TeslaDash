@@ -4,7 +4,7 @@ Develop and test on this workstation at **192.168.0.102:3000**. The NAS is **192
 
 ## Current NAS deployment
 
-On 23 October 2026, the authorized deployment installed `tesladash:20261023-oauth-gps` and its independent journey worker. The app is behind Caddy on NAS port 3000; its protected LAN backend is port 3001. Prometheus remains on the private Docker network and continues recording. A stopped previous app container is retained for rollback. Configuration, rotating Tesla credentials, vehicle snapshots and journey data remain in persistent `/config` storage.
+On 23 October 2026, the authorized deployment installed `tesladash:20261023-live-driving` and its independent journey worker. The app is behind Caddy on NAS port 3000; its protected LAN backend is port 3001. Prometheus remains on the private Docker network and continues recording. A stopped previous app container is retained for rollback. Configuration, rotating Tesla credentials, vehicle snapshots and journey data remain in persistent `/config` storage.
 
 External hostname: `mymedia.ddns.net`, not `mymedia.ddns.nte`. The NAS callback is `https://mymedia.ddns.net:3000/api/tesla/callback`. Its allowed browser origin is `https://mymedia.ddns.net:3000`. Tesla Developer must retain the matching external callback before external authentication can work. At verification, the portal still displayed only the localhost callback after save attempts; a manual save was requested. A direct Tesla authorization check also returned its Access Denied page. Do not describe external login as verified until the provider accepts the callback and a real sign-in completes.
 
@@ -32,7 +32,7 @@ The configured callback must be registered exactly with Tesla. A one-time handof
 
 ## GPS consent and worker
 
-Vehicle Location is enabled in the Tesla developer app, but the NAS vehicle token at deployment did not include `vehicle_location`. This requires fresh owner consent through `/connect/journeys`; refreshing the existing token cannot add the grant. The recorder reports `needs-permission` and skips location polling until granted. Scope hints recognize both array and space-delimited `scp` claims. They never substitute for provider validation of credentials and vehicle access.
+Vehicle Location is enabled in the Tesla developer app, but the NAS vehicle token at deployment did not include `vehicle_location`. This requires fresh owner consent through `/connect/journeys`; refreshing the existing token cannot add the grant. The recorder reports `needs-permission`. It can still record driving energy and distance with the existing Vehicle Information grant; precise location and navigation are requested only after Vehicle Location is granted. Scope hints recognize both array and space-delimited `scp` claims. They never substitute for provider validation of credentials and vehicle access.
 
 The worker runs with the browser closed. It has a dedicated `JOURNEY_RECORDER_TOKEN` file mounted read-only and uses only the private app API. App and worker restarts preserve `/config/journeys`. After consent, verify fresh GPS and worker status before promising a recorded drive. Missing coordinates, stale samples and privacy-hidden shared vehicles must remain visible failures, rather than fabricated routes. Sampled energy is estimated.
 
