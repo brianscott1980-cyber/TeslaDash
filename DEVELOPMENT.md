@@ -1,45 +1,43 @@
-# Development and deployment
+﻿# Development and deployment
 
-All development and previews run on this workstation. **Do not deploy to or restart NAS containers unless the user explicitly requests deployment.** The user authorized deployment on 23 October 2026. The current NAS app is `tesladash:20261023-public`, with Caddy on NAS port 3000 and a protected development data endpoint on LAN port 3001. External HTTPS completion is pending the router's manual port 80 validation rule and saving the prepared Tesla redirect settings.
+Develop and test on this workstation at **192.168.0.102:3000**. The NAS is **192.168.0.101**, with its own independent TeslaDash instance. Never forward the workstation address to the NAS. Deploy or restart NAS containers only when explicitly requested.
 
-Run `npm run dev`, then open http://192.168.0.102:3000 or http://127.0.0.1:3000. The dev server runs directly on this PC and listens on port 3000. The workstation has static IPv4 192.168.0.102/24. There must be no portproxy rule forwarding that workstation address to the NAS. The Windows firewall allows access from the home subnet 192.168.0.0/24.
+## Current NAS deployment
 
-192.168.0.101 belongs to the NAS. Its own TeslaDash instance will use NAS port 3000 when the user explicitly requests a deployment. Do not update or reconfigure that instance as part of routine development.
+On 23 October 2026, the authorized deployment installed `tesladash:20261023-oauth-gps` and its independent journey worker. The app is behind Caddy on NAS port 3000; its protected LAN backend is port 3001. Prometheus remains on the private Docker network and continues recording. A stopped previous app container is retained for rollback. Configuration, rotating Tesla credentials, vehicle snapshots and journey data remain in persistent `/config` storage.
 
-The workstation's ignored `.env.local` contains:
+External hostname: `mymedia.ddns.net`, not `mymedia.ddns.nte`. The NAS callback is `https://mymedia.ddns.net:3000/api/tesla/callback`. Its allowed browser origin is `https://mymedia.ddns.net:3000`. Tesla Developer must retain the matching external callback before external authentication can work. At verification, the portal still displayed only the localhost callback after save attempts; a manual save was requested. A direct Tesla authorization check also returned its Access Denied page. Do not describe external login as verified until the provider accepts the callback and a real sign-in completes.
+
+Trusted external HTTPS was deferred by the owner. The current certificate is not publicly trusted. Caddy HTTP certificate validation requires router TCP 80 forwarded to NAS port 8081; public application traffic uses TCP 3000 forwarded to NAS port 3000. Do not publish backend port 3001 or Prometheus to the internet.
+
+## Workstation configuration
+
+Keep all secrets in ignored `.env.local`:
 
 ```dotenv
 DASHBOARD_READ_PROXY=http://192.168.0.101:3001
-DASHBOARD_READ_PROXY_TOKEN=<dedicated read-only credential>
+DASHBOARD_READ_PROXY_TOKEN=<NAS dedicated read credential>
+JOURNEY_AUTH_RELAY_TOKEN=<NAS dedicated journey OAuth intake credential>
+TESLA_REDIRECT_URI=http://localhost:3000/api/tesla/callback
+SITE_ALLOWED_ORIGINS=http://192.168.0.102:3000,http://127.0.0.1:3000
 ```
 
-The development dashboard, charging history and recording checks read the NAS backend with its dedicated read credential. Its recording endpoint queries NAS Prometheus. The machine credential permits only GET of dashboard/history/recording/metrics APIs; it grants no browser login or control access. This avoids a second vehicle collector or token refresh process on the workstation. Do not scrape the workstation's `/api/metrics`; the NAS is the collector.
+The read credential permits only explicit read APIs, including journey history. It grants no browser session or vehicle commands. The OAuth relay credential permits only the NAS journey credential intake. Do not copy rotating vehicle tokens between instances. Do not scrape the workstation as another collector.
 
-The NAS disables SSH TCP forwarding. Do not change its SSH configuration or publish the Prometheus port for development. Direct diagnostic PromQL queries can be run through an ordinary SSH shell on the NAS, using its private Docker network address:
+## Site authentication
 
-```sh
-sudo docker inspect tesladash-prometheus --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
-curl -G --data-urlencode 'query=up{job="tesladash"}' http://172.20.0.2:9090/api/v1/query
-```
+Site login uses single-use state, nonce, PKCE, verified Tesla RS256 identity tokens, and a server-verified account email. Only the two owner email addresses in `lib/site-session.ts` are accepted. The approved Tesla subject is pinned in ignored configuration. Sessions are signed, HttpOnly and SameSite=Lax, and Secure for HTTPS. No vehicle tokens are saved by ordinary site sign-in.
 
-Use the current inspected IP if it changes. Check http://127.0.0.1:3000/api/recording for `recording` while testing the local UI.
+The configured callback must be registered exactly with Tesla. A one-time handoff returns login to an explicitly allowed browser origin. Arbitrary Host/forwarded headers are not trusted. Callback dispatch matches the returned state, so abandoned journey-consent cookies cannot hijack ordinary login.
 
-Before an explicitly requested production deployment, build and verify locally, then publish on NAS port 3000 while preserving its config and Prometheus data. Never copy workstation refresh tokens or workstation-only proxy settings into the NAS config. Remove `DASHBOARD_READ_PROXY` from any production environment to avoid proxy loops.
+## GPS consent and worker
 
-Pending local changes include the last-charge panel and icon-only System / Light / Dark control. They are not deployed yet.
+Vehicle Location is enabled in the Tesla developer app, but the NAS vehicle token at deployment did not include `vehicle_location`. This requires fresh owner consent through `/connect/journeys`; refreshing the existing token cannot add the grant. The recorder reports `needs-permission` and skips location polling until granted. Scope hints recognize both array and space-delimited `scp` claims. They never substitute for provider validation of credentials and vehicle access.
 
-## Tesla sign-in protects dashboard access
+The worker runs with the browser closed. It has a dedicated `JOURNEY_RECORDER_TOKEN` file mounted read-only and uses only the private app API. App and worker restarts preserve `/config/journeys`. After consent, verify fresh GPS and worker status before promising a recorded drive. Missing coordinates, stale samples and privacy-hidden shared vehicles must remain visible failures, rather than fabricated routes. Sampled energy is estimated.
 
-The workstation now requires a verified Tesla sign-in for dashboard pages and data APIs. Open http://192.168.0.102:3000. Anonymous page requests redirect to `/login`; private APIs return 401. The public `/api/health` reports service availability only.
+## Validation and Git
 
-The site login uses the existing registered `TESLA_REDIRECT_URI` (currently localhost). It starts a ten-minute, single-use state/nonce/PKCE transaction on that origin, verifies Tesla's RS256 ID token against its published third-party keys, then returns a one-minute, single-use handoff to the original approved workstation origin. This preserves login cookies when starting at 192.168.0.102 while Tesla returns to localhost. Hostnames must match `SITE_ALLOWED_ORIGINS` or the configured callback origin; forwarded hosts and arbitrary redirect targets are not trusted.
+Use Node 24. Run `node --test tests/*.test.mjs`, `npm.cmd run typecheck`, and a production build before deployment. The repository excludes `.env.local`, runtime data, operational deployment files, private keys and the separate verification-site checkout. Only the public Tesla verification key is published under `public/.well-known/appspecific/`.
 
-The first verified login must share access to the configured `TESLA_VIN`. Its Tesla subject is then pinned in `TESLA_AUTH_SUBJECT` in ignored `.env.local`; subsequent logins must match that subject. A random `SITE_SESSION_SECRET` is created there automatically. The browser receives a signed, HttpOnly, SameSite=Lax session lasting seven days, Secure when served over HTTPS. The Sign out button clears that browser's session. Rotating the signing secret revokes all existing sessions. Removing the pinned subject permits enrollment again, so do that only deliberately.
-
-Temporary owner email restriction: only `brianscott1980@googlemail.com` and `brianscott1980@gmail.com` are allowed. Site OAuth additionally requests `user_data` and reads `/api/1/users/me` server-side using that login's access token. Email must be supplied by Tesla, never a form, query parameter or unverified token claim. Missing/unreadable email fails closed. Signed sessions carry the checked email; the allowlist is rechecked on every private request. Old sessions and pending handoffs without an email are rejected and require a new login. Matching ignores letter case and outer whitespace, but does not expand dotted or plus-address Gmail aliases. The existing pinned subject check remains in force. This policy lives in `lib/site-session.ts` and remains until explicitly changed; no automatic expiry was requested.
-
-Site login never saves, replaces or refreshes `TESLA_ACCESS_TOKEN` or `TESLA_REFRESH_TOKEN`. The existing NAS collector and proxy data source remain independent. OAuth transaction files under ignored `runtime/site-auth` contain short-lived state and PKCE values, never Tesla access/refresh tokens.
-
-For a future explicitly authorized NAS deployment, configure and register an HTTPS callback that reaches that NAS instance, add its public/dashboard origin to `SITE_ALLOWED_ORIGINS`, and preserve its own API tokens. Do not copy the workstation's pinned account/session secret or rotating vehicle tokens to it automatically. No NAS changes have been made for this implementation.
-
-`/api/metrics` also requires authentication. Prometheus should use a dedicated random `METRICS_TOKEN` stored in the app environment and the matching `config/metrics-token` file (owner 65534, mode 600), mounted read-only at `/etc/prometheus/metrics-token`. The prepared Prometheus config references that file. This bearer credential grants only GET `/api/metrics`, not dashboard/API access. Prepare those files before a future deployment; the running NAS configuration remains unchanged. Docker health checks use `/api/health` rather than a protected page.
+The NAS disables SSH forwarding. Leave that setting and the private Prometheus network intact. Preserve NAS credentials and data during every explicitly authorized deployment. Check `/api/health` anonymously, private API rejection without credentials, protected read access, worker status and Prometheus target health afterwards.
