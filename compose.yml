@@ -11,6 +11,20 @@ services:
     volumes:
       - ./runtime/config:/config
     networks: [tesladash]
+  journey-worker:
+    image: tesladash:local
+    container_name: tesladash-journey-worker
+    restart: always
+    entrypoint: [node]
+    command: [/app/journey-worker.mjs]
+    healthcheck:
+      disable: true
+    depends_on:
+      tesladash:
+        condition: service_healthy
+    volumes:
+      - ./runtime/config/journey-recorder-token:/run/journey-recorder-token:ro
+    networks: [tesladash]
   prometheus:
     image: prom/prometheus:v3.15.1
     container_name: tesladash-prometheus

@@ -6,10 +6,12 @@ import {authSettings} from '../../../../lib/site-auth';
 import {readSession,sessionCookie} from '../../../../lib/site-session';
 import {audience,callback,localOrigin,saveEnv,saveTokens,token} from '../../../../lib/tesla-auth';
 export async function GET(request:NextRequest){
- if(request.cookies.has('tesla_journey_state'))return journeyCallback(request);
- if(request.cookies.has('tesla_site_state'))return siteCallback(request);
+ const state=request.nextUrl.searchParams.get('state');
+ // An abandoned GPS consent flow must not hijack a later site sign-in.
+ if(validOAuthState(request.cookies.get('tesla_journey_state')?.value,state))return journeyCallback(request);
+ if(validOAuthState(request.cookies.get('tesla_site_state')?.value,state))return siteCallback(request);
  const settings=await authSettings();if(!readSession(request.cookies.get(sessionCookie)?.value,settings.SITE_SESSION_SECRET,settings.TESLA_AUTH_SUBJECT))return new Response('Sign in before changing the vehicle connection.',{status:401,headers:{'Cache-Control':'no-store'}});
- const q=request.nextUrl.searchParams;const expected=request.cookies.get('tesla_oauth_state')?.value;const state=q.get('state');
+ const q=request.nextUrl.searchParams;const expected=request.cookies.get('tesla_oauth_state')?.value;
  const finish=(status:string)=>{const r=NextResponse.redirect(localOrigin+'/connect/tesla?result='+status);r.cookies.set('tesla_oauth_state','',{httpOnly:true,sameSite:'lax',maxAge:0,path:'/api/tesla',secure:oauthConfig().secure});r.headers.set('Cache-Control','no-store');r.headers.set('Referrer-Policy','no-referrer');return r;};
  if(!validOAuthState(expected,state))return finish('invalid-state');
  if(q.has('error')||!q.get('code'))return finish('cancelled');
