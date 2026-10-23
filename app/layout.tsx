@@ -1,4 +1,5 @@
 import './globals.css';
+import 'leaflet/dist/leaflet.css';
 import './consumer.css';
 import './desktop-display.css';
 import './themes.css';

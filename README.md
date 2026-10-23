@@ -54,3 +54,13 @@ Vehicle snapshots retain the last known measurements while the car sleeps. Prome
 The Docker setup serves the app through Caddy on NAS port 3000 and exposes a protected LAN backend on port 3001 for workstation reads. Preserve existing NAS config, rotating tokens and Prometheus data during deployment.
 
 References: [Tesla OAuth](https://developer.tesla.com/docs/fleet-api/authentication/third-party-tokens), [Tesla scopes](https://developer.tesla.com/docs/fleet-api/authentication/overview), [vehicle endpoints](https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-endpoints), [Octopus API](https://docs.octopus.energy/rest/guides/endpoints/).
+
+### While driving
+
+Fresh Drive/Reverse data automatically brings Journeys to the foreground once at the start of driving; navigating elsewhere remains possible, with a Live journey return button. The browser reads saved NAS samples every ten seconds, independently of the collector's approximately fifteen-second driving polls. Online idle checks use thirty seconds, sleeping checks one minute, and no wake-up commands are sent.
+
+The live view shows estimated cost so far, predicted total, remaining navigation time, arrival time, elapsed time, distance, energy, speed, battery and a following GPS map. Estimates use measured journey energy and the preceding recorded charge price. Prediction needs at least one mile of driving with adequate power-sample coverage and a fresh Tesla navigation distance. An unset destination or stale/missing measurements remain unavailable. An identified public charging stop prevents substituting an Octopus price when its public charging cost is unknown.
+
+Stops under thirty minutes remain one journey. Identified charging stops away from home can remain in the journey beyond thirty minutes. Fast DC charging is recognized directly; optional HOME_LATITUDE/HOME_LONGITUDE identify AC charging away from the home geofence. Unknown AC charger locations are not guessed. A provisional completed trip appears after one minute parked, and is updated if driving resumes.
+
+OpenStreetMap supplies street tiles by default, styled for light/dark mode. Tile requests reveal the viewed map area to that provider. Hide street tiles keeps a local GPS overlay without external tile requests, and the choice is remembered. Raw route records remain on the NAS. A street map is not a reconstructed historical route: only recorded GPS points are overlaid, and gaps are left visible.
