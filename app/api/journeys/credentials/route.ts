@@ -1,0 +1,2 @@
+import {acceptJourneyCredentials} from '../../../../lib/journey-authorization';
+export async function POST(request:Request){try{if(process.env.DASHBOARD_READ_PROXY)return new Response('NAS endpoint only',{status:409});await acceptJourneyCredentials(await request.json());return Response.json({connected:true},{headers:{'Cache-Control':'no-store'}})}catch{return Response.json({connected:false},{status:403})}}

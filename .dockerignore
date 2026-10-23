@@ -1,0 +1,13 @@
+.git
+.next
+node_modules
+.env*
+runtime
+deployment
+tesla-key-host
+*.tar.gz
+*.tsbuildinfo
+tests
+
+charging-history.json
+charging-history.json.tmp

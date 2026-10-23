@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 60s
+  scrape_timeout: 55s
+scrape_configs:
+  - job_name: tesladash
+    metrics_path: /api/metrics
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/metrics-token
+    static_configs:
+      - targets: ['tesladash:3000']
+storage:
+  tsdb:
+    retention:
+      time: 365d
+      size: 2GB

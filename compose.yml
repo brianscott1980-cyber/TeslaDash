@@ -1,0 +1,38 @@
+services:
+  tesladash:
+    build: .
+    image: tesladash:local
+    container_name: tesladash
+    restart: always
+    ports:
+      - '192.168.0.101:3001:3000'
+    environment:
+      PROMETHEUS_URL: http://tesladash-prometheus:9090
+    volumes:
+      - ./runtime/config:/config
+    networks: [tesladash]
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    container_name: tesladash-prometheus
+    restart: always
+    command: ['--config.file=/etc/prometheus/prometheus.yml', '--storage.tsdb.path=/prometheus']
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./runtime/config/metrics-token:/etc/prometheus/metrics-token:ro
+      - ./runtime/prometheus:/prometheus
+    networks: [tesladash]
+  https:
+    image: caddy:2.11.7-alpine
+    container_name: tesladash-https
+    restart: always
+    ports:
+      - '192.168.0.101:3000:3000'
+      - '192.168.0.101:8081:80'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./runtime/caddy/data:/data
+      - ./runtime/caddy/config:/config
+    networks: [tesladash]
+networks:
+  tesladash:
+    name: tesladash

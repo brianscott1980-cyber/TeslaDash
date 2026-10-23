@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {journeyCost,journeyIntervals,latestJourneyIndex} from '../lib/journey-facts.ts';
+const trip={date:'Example',from:'A',to:'B',miles:10,kwh:3,start:'2026-10-23T08:00:00Z',end:'2026-10-23T08:30:00Z'};
+const charge={id:'1',start:'2026-10-22T23:00:00Z',end:'2026-10-23T05:00:00Z',kwh:20,cost:1.32,costBasis:'estimated',type:'SMART',location:'Home'};
+test('Journey estimate uses its energy and the preceding charge, excluding later charges',()=>{const later={...charge,end:'2026-10-23T09:00:00Z',cost:20};const result=journeyCost(trip,[later,charge]);assert.ok(Math.abs(result.value-.198)<1e-10);assert.equal(result.basis,'estimated');});
+test('Missing historical cost or trip timing is not replaced by a zero or current tariff',()=>{assert.equal(journeyCost(trip,[{...charge,cost:null}]),null);assert.equal(journeyCost({...trip,start:undefined},[charge]),null);assert.equal(journeyCost(undefined,[charge]),null);});
+test('Explicit recorded journey cost takes priority',()=>{assert.deepEqual(journeyCost({...trip,costGbp:1.25,costBasis:'recorded'},[charge]),{value:1.25,basis:'recorded',explanation:'Cost supplied with the journey record.'});});
+test('Timeline preserves recovered energy, rejects overlaps, and excludes out-of-journey samples',()=>{const a={start:trip.start,end:'2026-10-23T08:10:00Z',kwh:.4},b={start:'2026-10-23T08:10:00Z',end:trip.end,kwh:-.1};assert.deepEqual(journeyIntervals({...trip,energyTimeline:[b,a]}),[a,b]);assert.deepEqual(journeyIntervals({...trip,energyTimeline:[a,{...b,start:'2026-10-23T08:05:00Z'}]}),[]);assert.deepEqual(journeyIntervals({...trip,energyTimeline:[{...a,start:'2026-10-23T07:50:00Z'}]}),[]);});
+test('Latest completed journey is selected by date rather than array order',()=>{const older={...trip,end:'2026-10-22T08:30:00Z'},future={...trip,end:'2026-10-24T08:30:00Z'};assert.equal(latestJourneyIndex([older,trip,future],Date.parse('2026-10-23T10:00:00Z')),1);assert.equal(latestJourneyIndex([],Date.now()),-1);});

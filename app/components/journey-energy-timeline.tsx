@@ -1,0 +1,12 @@
+import {Activity} from 'lucide-react';
+import type {Trip} from '../../lib/data';
+import {journeyIntervals} from '../../lib/journey-facts';
+const time=(t:number)=>new Date(t).toLocaleTimeString('en-GB',{timeZone:'Europe/London',hour:'2-digit',minute:'2-digit'});
+export function JourneyEnergyTimeline({trip,preview}:{trip:Trip|undefined;preview:boolean}){
+ const intervals=journeyIntervals(trip),start=Date.parse(trip?.start??''),end=Date.parse(trip?.end??'');
+ const scale=Math.max(...intervals.map(s=>Math.abs(s.kwh)/(s.kwh<0?.23:.65)),.01);
+ const recovered=intervals.some(s=>s.kwh<0);
+ return <section className="panel journey-energy-panel" aria-label="Journey energy timeline"><div className="panel-top"><div><span className="eyebrow">ENERGY THROUGH YOUR DRIVE</span><h3>Energy used during the journey</h3></div><span className="journey-timeline-label">{preview?'Example readings':trip?`${trip.from} to ${trip.to}`:'Awaiting journey readings'}</span></div>
+ {intervals.length?<><div className="journey-energy-plot" role="group" aria-label="Energy used and recovered by time interval"><span className="journey-energy-unit">kWh per interval</span><div className="journey-energy-baseline"/><span className="journey-energy-zero">0</span>{intervals.map((s,i)=>{const regeneration=s.kwh<0,height=Math.abs(s.kwh)/scale*100;const label=`${time(Date.parse(s.start))} to ${time(Date.parse(s.end))}: ${Math.abs(s.kwh).toFixed(2)} kWh ${regeneration?'recovered':'used'}`;return <div key={i} className={'journey-energy-bar'+(regeneration?' recovered':'')} role="img" tabIndex={0} aria-label={label} title={label} style={{left:`${(Date.parse(s.start)-start)/(end-start)*100}%`,width:`${(Date.parse(s.end)-Date.parse(s.start))/(end-start)*100}%`,height:`${height}%`,...(regeneration?{top:'72%'}:{bottom:'28%'})}}/>})}</div><div className="journey-energy-axis">{Array.from({length:5},(_,i)=><span key={i}>{time(start+(end-start)*i/4)}</span>)}</div><div className="journey-energy-key"><span><i/>Energy used</span>{recovered&&<span><i className="recovered"/>Energy recovered</span>}<small>Recorded intervals / UK time{preview?' / fictional example':''}</small></div></>:<div className="journey-energy-empty"><Activity size={24}/><div><strong>{trip?'Energy timeline not recorded for this journey.':'No journey energy readings recorded yet.'}</strong><p>The timeline will show energy used through the drive when time-stamped journey readings are available.</p></div></div>}
+ </section>;
+}

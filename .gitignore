@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.env*
+!.env.example
+*.tsbuildinfo
+runtime/
+deployment/
+tesla-key-host-deploy.tar.gz
+
+charging-history.json
+charging-history.json.tmp
+tesla-key-host/
+*.log
+*.pem
+*.key
+!public/.well-known/appspecific/com.tesla.3p.public-key.pem

@@ -1,0 +1,44 @@
+:root{color-scheme:dark}
+.theme-control{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid var(--border);border-radius:7px;color:var(--muted);flex-shrink:0;cursor:pointer}.theme-control:hover{color:var(--green);background:var(--panel)}.theme-control:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+:root[data-theme=light]{color-scheme:light;--bg:#edf2ef;--panel:#fff;--border:#d3ddd6;--muted:#586b61;--text:#172b22;--green:#3b711e;--map-base:#e2ebe7;--map-block:#d4e1da;--map-grid:#bdcec5;--map-water-start:#bed9df;--map-water-end:#cfe2e4;--map-water-edge:#d1e3e4;--map-vignette:#edf2ef;--map-road:#b3c6bb;--map-road-centre:#f5f8f6;--map-park:#bdd4bc;--route-lime:#487b22;--route-blue:#247a98;--route-purple:#8663b1}
+html[data-theme=light] aside{background:#f7faf8}
+html[data-theme=light] nav button{color:#52685b}html[data-theme=light] nav button:hover{background:#e6eee8}html[data-theme=light] nav button.active{color:#35651f;background:#e0edd7}
+html[data-theme=light] .consumer .vehicle{background:radial-gradient(ellipse at 50% 75%,#d9e7dc90,transparent 68%),#f9fcfa}
+html[data-theme=light] .refresh,html[data-theme=light] select{background:#f9fcfa;border-color:var(--border);color:#385342}
+html[data-theme=light] .avatar{background:#dbe8df;color:#35543f}
+html[data-theme=light] :is(.breadcrumb span,.display-clock,.journey-list-title,.journey-choice strong,.map-empty h4,.consumer-empty h4,.details strong,.history-context strong,.modal h3){color:var(--text)}
+html[data-theme=light] :is(.consumer .vehicle-bottom,.consumer .vehicle-bottom button,.metric>span,.metric>small,.metric em,.consumer .metric>small,.desktop-overview .metric>small,.display-clock span,.charge-cost-metric>span,.inline-help,.journey-choice small,.journey-choice>div>span,.journey-map-note,.map-caption,.map-empty p,.journey-list-empty p,.journey-list-empty small,.consumer-empty,.consumer-empty small,.rate-footnote,.history-context,.history-context small,.cost-basis,.table-footer,.consumer footer>button,.map-preview-toggle){color:var(--muted)}
+html[data-theme=light] .badge{background:#e7f2de;border-color:#b7d1a7;color:#386d24}
+html[data-theme=light] .progress{background:#dce6de}html[data-theme=light] .progress b{border-color:#5c755f}
+html[data-theme=light] .timeline-track{background:#edf3ee;border-color:#c9d8cd}html[data-theme=light] .timeline-gridline{border-color:#49604d12}
+html[data-theme=light] .timeline-bar{background:#9bc37e;border-color:#66974a}html[data-theme=light] .timeline-bar.active{background:#548d32}
+html[data-theme=light] .timeline-now{background:#25462c}html[data-theme=light] .timeline-now:before{border-top-color:#25462c}html[data-theme=light] .timeline-now>span{color:#25462c}html[data-theme=light] .timeline-key .pause{background:#edf3ee;border-color:#93aa9b}
+html[data-theme=light] :is(.journey-panel,.journey-list){background:var(--panel)}html[data-theme=light] .journey-map{background:var(--map-base)}
+html[data-theme=light] .journey-choice:hover,html[data-theme=light] .journey-choice.selected{background:#edf4e9}
+html[data-theme=light] .map-empty{background:radial-gradient(ellipse,#eef4f0eb,transparent)}
+html[data-theme=light] .map-empty>div,html[data-theme=light] .map-empty button,html[data-theme=light] .consumer-empty>svg{color:#3b711e;background:#e5efdf;border-color:#aec6a1;box-shadow:none}
+html[data-theme=light] .map-preview-label{background:#e3eedb;color:#456337;border-color:#c4d6b9}
+html[data-theme=light] .octopus-label{background:#f0e9f7;border-color:#dac9e7;color:#77548e}
+html[data-theme=light] .history-records thead{background:#edf3ef}html[data-theme=light] :is(td,th){border-color:var(--border)}
+html[data-theme=light] .table-icon{background:#e2eedb;color:#49722f}html[data-theme=light] .table-icon.super{background:#f2e8de;color:#88613e}
+html[data-theme=light] :is(.consumer .vehicle-bottom,.consumer .table-footer,.journey-choice){border-color:var(--border)}
+html[data-theme=light] .modal-backdrop{background:#203e3055}html[data-theme=light] .modal{box-shadow:0 20px 70px #24402e30}
+html[data-theme=light] .notice{color:#71541f;background:#fff3d9;border-color:#e2c78d}html[data-theme=light] .status-warning{color:#8b6016}
+html[data-theme=light] .primary{color:#fff}html[data-theme=light] .battery-symbol{border-color:#829b88}
+html[data-theme=light] .desktop-overview .journey-list,html[data-theme=light] .desktop-overview .battery{scrollbar-color:#9fb59f transparent}
+@media(max-width:700px){.theme-control{width:30px;height:30px}.header-right{gap:8px}.display-clock{gap:4px}}
+
+html[data-theme=light] :is(.mode,.icon-button,.battery>p,.charging-footer,.text-button,.workspace){color:var(--muted)}html[data-theme=light] th{background:#edf3ef;color:#4e6658}html[data-theme=light] .cell-location small{color:var(--muted)}html[data-theme=light] .battery-symbol i{background:#639c43}html[data-theme=light] .timeline-bar:focus-visible{outline-color:#345c28}
+html[data-theme=light] .pill-home{background:#e7f2de;color:#386d24;border-color:#b7d1a7}
+html[data-theme=light] .pill-supercharger{background:#fbeae8;color:#c4321d;border-color:#f3b2a7}
+html[data-theme=light] .pill-fast{background:#fdf5e6;color:#a46d12;border-color:#ebd09c}
+html[data-theme=light] .pill-slow{background:#eaf3fa;color:#1c6aa5;border-color:#b3d4ed}
+html[data-theme=light] .table-icon.fast{background:#fdf5e6;color:#a46d12}
+html[data-theme=light] .table-icon.slow{background:#eaf3fa;color:#1c6aa5}
+html[data-theme=light] .category-filter-btn{background:#fff;border-color:var(--border);color:var(--muted)}
+html[data-theme=light] .category-filter-btn.active{background:#e0edd7;color:#35651f;border-color:#a8caa1}
+html[data-theme=light] .category-filter-btn .filter-count{background:#ecefe8}
+html[data-theme=light] .category-filter-btn.active .filter-count{background:#cbe1c1;color:#2c5918}
+html[data-theme=light] .live-charging-hero{background:radial-gradient(ellipse at 85% 20%,#e1efe2 0%,#fff 70%);border-color:#b9d4ba}
+html[data-theme=light] .stat-card{background:#f7faf8;border-color:#d4dfd8}
+html[data-theme=light] .tariff-type-tag{background:#f2f6f4;border-color:#d5dfd8;color:#52695c}
