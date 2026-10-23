@@ -21,6 +21,7 @@ async function collect():Promise<JourneyTracking>{
   const token=await accessToken();if(!token||!process.env.TESLA_VIN)return finish('unavailable','Tesla connection is not configured.');
   const headers={Authorization:'Bearer '+token};const scopes=teslaTokenScopes(token);
   const location=scopes.includes('vehicle_location');
+  if(!location){store=updateDrive(store,undefined);await save('history.json',store);return finish('needs-permission','Grant Tesla Vehicle Location before driving to record a route. No location polling is attempted until permission is granted.');}
   const get=async(url:string)=>{const r=await fetch(url,{headers,cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('Vehicle sample unavailable');return (await r.json()).response;};
   const base=audience()+'/api/1/vehicles/'+encodeURIComponent(process.env.TESLA_VIN);
   if(!store.active){const identity=await get(base);if(identity.state!=='online'){store=updateDrive(store,undefined);await save('history.json',store);return finish(location?'asleep':'needs-permission',location?'Car is asleep or offline. Waiting without waking it.':'Grant Tesla Vehicle Location before driving to record a route.');}}
