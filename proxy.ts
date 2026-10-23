@@ -5,7 +5,7 @@ import {authSettings} from './lib/site-auth';
 
 export async function proxy(request:NextRequest){
  const path=request.nextUrl.pathname;
- const publicPaths=['/api/journeys/begin','/login','/api/auth/tesla/start','/api/auth/tesla/begin','/api/auth/tesla/callback','/api/auth/tesla/complete','/api/auth/logout','/api/health'];
+ const publicPaths=['/.well-known/appspecific/com.tesla.3p.public-key.pem','/api/journeys/begin','/login','/api/auth/tesla/start','/api/auth/tesla/begin','/api/auth/tesla/callback','/api/auth/tesla/complete','/api/auth/logout','/api/health'];
  // Tesla's already registered callback remains the entry point for site sign-in.
  if(publicPaths.includes(path)||path==='/api/tesla/callback'){const response=NextResponse.next();response.headers.set('Cache-Control','no-store');response.headers.set('Referrer-Policy',path==='/login'?'same-origin':'no-referrer');return response;}
  const env=await authSettings();
